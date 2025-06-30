@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.http import JsonResponse
+from django.db.models import Q  # ← AGREGAR ESTA LÍNEA
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
