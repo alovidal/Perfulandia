@@ -1,12 +1,287 @@
 {% extends 'base.html' %}
+{% load humanize %}
 
 {% block title %}Productos con Bajo Stock{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Productos con Bajo Stock</h1>
-<div class="card shadow-sm">
-    <div class="card-body">
-        <p class="text-muted">Aquí se listarán todos los productos que necesitan ser reabastecidos. (En construcción)</p>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-exclamation-triangle text-warning"></i> Productos con Bajo Stock</h1>
+    <div>
+        <a href="{% url 'inventario:crear_movimiento' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Reabastecer Stock
+        </a>
+        <a href="{% url 'inventario:productos' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-box"></i> Ver Todos los Productos
+        </a>
     </div>
 </div>
-{% endblock %} 
+
+{% if productos %}
+    <!-- Alerta general -->
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <strong>¡Atención!</strong> Hay {{ productos.count }} producto{{ productos.count|pluralize }} que necesitan reabastecimiento urgente.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center bg-danger text-white h-100">
+                <div class="card-body">
+                    <i class="bi bi-exclamation-triangle" style="font-size: 2rem;"></i>
+                    <h4 class="mt-2">{{ productos.count }}</h4>
+                    <p class="mb-0">Productos Críticos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center bg-warning text-white h-100">
+                <div class="card-body">
+                    <i class="bi bi-graph-down" style="font-size: 2rem;"></i>
+                    <h4 class="mt-2">
+                        {% with agotados=productos|dictsort:"stock" %}
+                            {% for p in agotados %}
+                                {% if p.stock == 0 %}{{ forloop.counter }}{% endif %}
+                            {% endfor %}
+                        {% endwith %}
+                    </h4>
+                    <p class="mb-0">Sin Stock</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center bg-info text-white h-100">
+                <div class="card-body">
+                    <i class="bi bi-currency-dollar" style="font-size: 2rem;"></i>
+                    <h4 class="mt-2">
+                        ${% with total=0 %}
+                            {% for producto in productos %}
+                                {% widthratio producto.precio 1 producto.stock_minimo as valor_minimo %}
+                                {{ total|add:valor_minimo }}
+                            {% endfor %}
+                        {% endwith %}
+                    </h4>
+                    <p class="mb-0">Inversión Mínima</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center bg-secondary text-white h-100">
+                <div class="card-body">
+                    <i class="bi bi-clock" style="font-size: 2rem;"></i>
+                    <h4 class="mt-2">Urgente</h4>
+                    <p class="mb-0">Acción Requerida</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de productos -->
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Productos que Necesitan Reabastecimiento</h5>
+            <button class="btn btn-outline-primary btn-sm" onclick="exportarReporte()">
+                <i class="bi bi-download"></i> Exportar Reporte
+            </button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th class="text-center">Stock Actual</th>
+                            <th class="text-center">Stock Mínimo</th>
+                            <th class="text-center">Diferencia</th>
+                            <th class="text-end">Valor Unitario</th>
+                            <th class="text-center">Criticidad</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos %}
+                        <tr class="{% if producto.stock == 0 %}table-danger{% elif producto.stock <= 2 %}table-warning{% endif %}">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ producto.imagen.url|default:'/static/img/placeholder.png' }}" 
+                                         class="img-thumbnail me-3" style="width: 60px; height: 60px; object-fit: cover;" 
+                                         alt="{{ producto.nombre }}">
+                                    <div>
+                                        <div class="fw-bold">{{ producto.nombre }}</div>
+                                        <small class="text-muted">{{ producto.codigo }}</small><br>
+                                        <small class="text-muted">{{ producto.categoria.nombre }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center align-middle">
+                                <span class="badge fs-6 {% if producto.stock == 0 %}bg-danger{% elif producto.stock <= 2 %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                    {{ producto.stock }}
+                                </span>
+                            </td>
+                            <td class="text-center align-middle">
+                                <span class="text-muted">{{ producto.stock_minimo }}</span>
+                            </td>
+                            <td class="text-center align-middle">
+                                {% with diferencia=producto.stock_minimo|add:producto.stock|mul:-1 %}
+                                <span class="text-danger fw-bold">
+                                    {% if diferencia > 0 %}+{{ diferencia }}{% else %}{{ diferencia }}{% endif %}
+                                </span>
+                                {% endwith %}
+                            </td>
+                            <td class="text-end align-middle">
+                                <strong>${{ producto.precio|floatformat:0|intcomma }}</strong>
+                            </td>
+                            <td class="text-center align-middle">
+                                {% if producto.stock == 0 %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-exclamation-triangle"></i> Crítico
+                                    </span>
+                                {% elif producto.stock <= 2 %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-exclamation-circle"></i> Alto
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-info-circle"></i> Medio
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="align-middle">
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-success" 
+                                            onclick="abrirModalReabastecimiento('{{ producto.id }}', '{{ producto.nombre }}')">
+                                        <i class="bi bi-plus"></i> Reabastecer
+                                    </button>
+                                    <a href="{% url 'inventario:producto_editar' producto.pk %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones masivas -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h6>Acciones Masivas</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <button class="btn btn-success me-2" onclick="reabastecerTodos()">
+                        <i class="bi bi-arrow-up-circle"></i> Reabastecer Todos al Mínimo
+                    </button>
+                    <button class="btn btn-info me-2" onclick="generarOrdenCompra()">
+                        <i class="bi bi-file-text"></i> Generar Orden de Compra
+                    </button>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">
+                        Total estimado para reabastecer todos: 
+                        <strong>
+                            ${% with total=0 %}
+                                {% for producto in productos %}
+                                    {% widthratio producto.precio 1 producto.stock_minimo as costo %}
+                                    {{ total|add:costo }}
+                                {% endfor %}
+                            {% endwith %}
+                        </strong>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% else %}
+    <!-- Estado sin productos con stock bajo -->
+    <div class="text-center py-5">
+        <i class="bi bi-check-circle text-success" style="font-size: 5rem;"></i>
+        <h2 class="mt-3 text-success">¡Excelente!</h2>
+        <p class="text-muted">Todos los productos tienen stock suficiente.</p>
+        <a href="{% url 'inventario:productos' %}" class="btn btn-primary mt-2">
+            <i class="bi bi-box"></i> Ver Inventario Completo
+        </a>
+    </div>
+{% endif %}
+
+<!-- Modal para reabastecimiento rápido -->
+<div class="modal fade" id="modalReabastecimiento" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reabastecer Producto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formReabastecimiento">
+                    <input type="hidden" id="producto_id" name="producto_id">
+                    <div class="mb-3">
+                        <label class="form-label">Producto:</label>
+                        <p id="producto_nombre" class="fw-bold"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cantidad_entrada" class="form-label">Cantidad a Agregar:</label>
+                        <input type="number" class="form-control" id="cantidad_entrada" min="1" required>
+                        <div class="form-text">Recomendado: <span id="cantidad_recomendada"></span> unidades</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="motivo_entrada" class="form-label">Motivo:</label>
+                        <input type="text" class="form-control" id="motivo_entrada" value="Reabastecimiento por stock bajo" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="ejecutarReabastecimiento()">
+                    <i class="bi bi-check"></i> Confirmar Reabastecimiento
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function abrirModalReabastecimiento(productoId, nombreProducto, stockMinimo) {
+    document.getElementById('producto_id').value = productoId;
+    document.getElementById('producto_nombre').textContent = nombreProducto;
+    document.getElementById('cantidad_recomendada').textContent = stockMinimo;
+    document.getElementById('cantidad_entrada').value = stockMinimo;
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalReabastecimiento'));
+    modal.show();
+}
+
+function ejecutarReabastecimiento() {
+    const productoId = document.getElementById('producto_id').value;
+    const cantidad = document.getElementById('cantidad_entrada').value;
+    const motivo = document.getElementById('motivo_entrada').value;
+    
+    // Aquí iría la lógica para crear el movimiento de inventario
+    // Por ahora simulamos la acción
+    alert(`Reabastecimiento programado:\nProducto ID: ${productoId}\nCantidad: ${cantidad}\nMotivo: ${motivo}`);
+    
+    // Cerrar modal y recargar página
+    bootstrap.Modal.getInstance(document.getElementById('modalReabastecimiento')).hide();
+    setTimeout(() => location.reload(), 1000);
+}
+
+function reabastecerTodos() {
+    if (confirm('¿Estás seguro de que quieres reabastecer todos los productos al stock mínimo?')) {
+        alert('Funcionalidad de reabastecimiento masivo en desarrollo');
+    }
+}
+
+function generarOrdenCompra() {
+    alert('Generando orden de compra... (Funcionalidad en desarrollo)');
+}
+
+function exportarReporte() {
+    alert('Exportando reporte de stock bajo... (Funcionalidad en desarrollo)');
+}
+</script>
+
+{% endblock %}
