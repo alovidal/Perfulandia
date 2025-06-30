@@ -1,175 +1,83 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Inicio - Perfulandia SPA{% endblock %}
+{% block title %}Bienvenido a Perfulandia SPA{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <h1><i class="fas fa-store"></i> ¡Bienvenido a Perfulandia SPA!</h1>
-        <p class="lead">Sistema de Transformación Digital</p>
+    {# Sección para usuarios no autenticados o clientes #}
+    {% if not user.is_authenticated or user.rol == 'cliente' %}
+        <div class="p-5 mb-4 rounded-3 text-center jumbotron-bg">
+            <div class="container-fluid py-5">
+                <h1 class="display-5 fw-bold">Descubre tu Esencia en Perfulandia</h1>
+                <p class="fs-4">Las mejores fragancias del mundo, a tu alcance.</p>
+                <a class="btn btn-primary btn-lg" href="{% url 'clientes:catalogo' %}">Ver Catálogo</a>
+            </div>
+        </div>
+
+        <h2 class="text-center my-4">Productos Destacados</h2>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+            {% for producto in productos_destacados %}
+                <div class="col">
+                    <div class="card h-100">
+                        {% if producto.imagen %}
+                            <img src="{{ producto.imagen.url }}" class="card-img-top" alt="{{ producto.nombre }}">
+                        {% else %}
+                            <img src="{% static 'img/placeholder.png' %}" class="card-img-top" alt="Sin imagen">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ producto.nombre }}</h5>
+                            <p class="card-text">${{ producto.precio|floatformat:0 }}</p>
+                        </div>
+                        <div class="card-footer text-center">
+                            <a href="#" class="btn btn-outline-primary">Ver Detalles</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-center">No hay productos destacados en este momento.</p>
+            {% endfor %}
+        </div>
         
-        {% if user.is_authenticated %}
-            <div class="alert alert-success">
-                <h4><i class="fas fa-user"></i> Hola, {{ user.get_full_name|default:user.username }}!</h4>
-                <p>Tu rol en el sistema: <strong><i class="fas fa-id-badge"></i> {{ user.get_rol_display }}</strong></p>
-            </div>
-            
-            <!-- Dashboard según rol -->
-            {% if user.rol == 'cliente' %}
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card border-primary">
-                            <div class="card-header bg-primary text-white">
-                                <h5><i class="fas fa-shopping-bag"></i> Acciones Rápidas</h5>
-                            </div>
-                            <div class="card-body">
-                                <a href="{% url 'clientes:catalogo' %}" class="btn btn-primary btn-lg mb-2 w-100">
-                                    <i class="fas fa-search"></i> Explorar Catálogo
-                                </a>
-                                <a href="{% url 'clientes:carrito' %}" class="btn btn-outline-primary btn-lg mb-2 w-100">
-                                    <i class="fas fa-shopping-cart"></i> Ver Mi Carrito
-                                </a>
-                                <a href="{% url 'clientes:mis_pedidos' %}" class="btn btn-outline-secondary btn-lg w-100">
-                                    <i class="fas fa-list"></i> Mis Pedidos
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="fas fa-star"></i> Productos Destacados</h5>
-                            </div>
-                            <div class="card-body">
-                                {% if productos_destacados %}
-                                    {% for producto in productos_destacados|slice:":3" %}
-                                        <div class="border-bottom pb-2 mb-2">
-                                            <strong>{{ producto.nombre }}</strong><br>
-                                            <small class="text-muted">${{ producto.precio|floatformat:0 }}</small>
-                                        </div>
-                                    {% endfor %}
-                                    <a href="{% url 'clientes:catalogo' %}" class="btn btn-sm btn-outline-primary">Ver todos</a>
-                                {% else %}
-                                    <p class="text-muted">No hay productos disponibles</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-            {% elif user.rol in 'vendedor,gerente,admin' %}
-                <div class="row mb-4">
-                    <!-- Estadísticas -->
-                    <div class="col-md-3">
-                        <div class="card text-center bg-info text-white">
-                            <div class="card-body">
-                                <i class="fas fa-chart-line fa-2x mb-2"></i>
-                                <h4>{{ ventas_hoy|default:0 }}</h4>
-                                <p>Ventas Hoy</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-center bg-success text-white">
-                            <div class="card-body">
-                                <i class="fas fa-dollar-sign fa-2x mb-2"></i>
-                                <h4>${{ ingresos_mes|floatformat:0|default:0 }}</h4>
-                                <p>Ingresos del Mes</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-center bg-warning text-white">
-                            <div class="card-body">
-                                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
-                                <h4>{{ productos_bajo_stock|default:0 }}</h4>
-                                <p>Productos Bajo Stock</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-center bg-primary text-white">
-                            <div class="card-body">
-                                <i class="fas fa-clock fa-2x mb-2"></i>
-                                <h4>{{ pedidos_pendientes|default:0 }}</h4>
-                                <p>Pedidos Pendientes</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="fas fa-tools"></i> Acciones Rápidas</h5>
-                            </div>
-                            <div class="card-body">
-                                {% if user.rol in 'vendedor,gerente,admin' %}
-                                    <a href="{% url 'ventas:registrar' %}" class="btn btn-success btn-lg mb-2 w-100">
-                                        <i class="fas fa-cash-register"></i> Registrar Venta
-                                    </a>
-                                {% endif %}
-                                {% if user.rol in 'gerente,admin' %}
-                                    <a href="{% url 'inventario:productos' %}" class="btn btn-primary btn-lg mb-2 w-100">
-                                        <i class="fas fa-boxes"></i> Gestionar Inventario
-                                    </a>
-                                {% endif %}
-                                <a href="{% url 'reportes:dashboard' %}" class="btn btn-info btn-lg w-100">
-                                    <i class="fas fa-chart-bar"></i> Ver Reportes
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="fas fa-list"></i> Resumen de Actividad</h5>
-                            </div>
-                            <div class="card-body">
-                                <ul class="list-unstyled">
-                                    <li><i class="fas fa-check-circle text-success"></i> Ventas del mes: {{ ventas_mes|default:0 }}</li>
-                                    <li><i class="fas fa-warning text-warning"></i> Productos con stock bajo: {{ productos_bajo_stock|default:0 }}</li>
-                                    <li><i class="fas fa-clock text-info"></i> Pedidos pendientes: {{ pedidos_pendientes|default:0 }}</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
-            
-        {% else %}
-            <div class="alert alert-info">
-                <h4><i class="fas fa-info-circle"></i> ¡Bienvenido!</h4>
-                <p>Por favor, <a href="{% url 'usuarios:login' %}" class="alert-link">inicia sesión</a> o 
-                   <a href="{% url 'usuarios:registro' %}" class="alert-link">regístrate</a> para comenzar.</p>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5><i class="fas fa-users"></i> Para Clientes</h5>
-                        </div>
-                        <div class="card-body">
-                            <p>Explora nuestro catálogo de productos y realiza compras en línea.</p>
-                            <a href="{% url 'usuarios:registro' %}" class="btn btn-primary">Registrarse</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5><i class="fas fa-user-tie"></i> Para Empleados</h5>
-                        </div>
-                        <div class="card-body">
-                            <p>Accede al sistema de gestión empresarial.</p>
-                            <a href="{% url 'usuarios:login' %}" class="btn btn-success">Iniciar Sesión</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        {% if user.is_authenticated and user.rol == 'cliente' and mis_pedidos_recientes %}
+            <h2 class="text-center my-5">Mis Pedidos Recientes</h2>
+            <ul class="list-group">
+                {% for pedido in mis_pedidos_recientes %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Pedido #{{ pedido.numero_pedido }} - {{ pedido.fecha_pedido|date:"d/m/Y" }}
+                        <span class="badge bg-info rounded-pill">{{ pedido.get_estado_display }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
         {% endif %}
-    </div>
-</div>
+
+    {% else %}
+        {# Dashboard para Vendedor, Gerente o Admin #}
+        <h1 class="mb-4">Dashboard de Administración</h1>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">Ventas de Hoy</h5>
+                        <p class="card-text fs-4">{{ ventas_hoy }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title">Ingresos del Mes</h5>
+                        <p class="card-text fs-4">${{ ingresos_mes|floatformat:0 }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card text-white bg-warning">
+                    <div class="card-body">
+                        <h5 class="card-title">Pedidos Pendientes</h5>
+                        <p class="card-text fs-4">{{ pedidos_pendientes }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}

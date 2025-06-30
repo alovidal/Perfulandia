@@ -1,23 +1,51 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from usuarios.models import Usuario  # ← Corregir importación
+from django.utils.html import format_html
 from .models import Auditoria
-
-@admin.register(Usuario)
-class UsuarioAdmin(UserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name', 'rol', 'is_active', 'fecha_creacion')
-    list_filter = ('rol', 'is_active', 'fecha_creacion')
-    search_fields = ('username', 'email', 'first_name', 'last_name')
-    
-    fieldsets = UserAdmin.fieldsets + (
-        ('Información Adicional', {
-            'fields': ('rol',)
-        }),
-    )
 
 @admin.register(Auditoria)
 class AuditoriaAdmin(admin.ModelAdmin):
-    list_display = ('usuario', 'accion', 'tabla', 'fecha')
+    list_display = (
+        'fecha',
+        'usuario',
+        'accion_badge',
+        'tabla', 
+        'registro_id',
+        'ip_address'
+    )
     list_filter = ('accion', 'tabla', 'fecha')
-    search_fields = ('usuario__username', 'accion', 'tabla')
-    readonly_fields = ('usuario', 'accion', 'tabla', 'registro_id', 'detalles', 'fecha', 'ip_address')
+    search_fields = (
+        'usuario__username',
+        'accion',
+        'tabla',
+        'registro_id'
+    )
+    ordering = ('-fecha',)
+    readonly_fields = (
+        'usuario',
+        'accion', 
+        'tabla',
+        'registro_id',
+        'detalles',
+        'fecha',
+        'ip_address'
+    )
+    
+    def has_add_permission(self, request):
+        return False  # No permitir agregar auditorías manualmente
+    
+    def has_change_permission(self, request, obj=None):
+        return False  # No permitir editar auditorías
+    
+    def accion_badge(self, obj):
+        colors = {
+            'CREATE': 'green',
+            'UPDATE': 'blue', 
+            'DELETE': 'red',
+            'LOGIN': 'purple'
+        }
+        color = colors.get(obj.accion, 'gray')
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}</span>',
+            color, obj.accion
+        )
+    accion_badge.short_description = 'Acción'
