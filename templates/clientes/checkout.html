@@ -3,6 +3,49 @@
 {% block title %}Finalizar Compra{% endblock %}
 
 {% block content %}
-<h1>Finalizar Compra (Checkout)</h1>
-<p>Formulario para que el cliente ingrese su dirección de envío, método de pago y confirme la compra.</p>
+<h1 class="mb-4">Finalizar Compra</h1>
+
+<div class="row">
+    <!-- Columna del Formulario de Envío -->
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h4>Dirección de Envío</h4>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <hr>
+                    <p class="text-muted small">Al hacer clic en "Confirmar Compra", tu pedido será procesado y se descontará el stock. Este es un proceso simulado y no se realizará ningún cobro real.</p>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Confirmar Compra</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Columna del Resumen del Pedido -->
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5>Resumen de tu Pedido</h5>
+                <ul class="list-group list-group-flush">
+                    {% for item in carrito.items.all %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="my-0">{{ item.producto.nombre }}</h6>
+                            <small class="text-muted">Cantidad: {{ item.cantidad }}</small>
+                        </div>
+                        <span class="text-muted">${{ item.subtotal|floatformat:0 }}</span>
+                    </li>
+                    {% endfor %}
+                    <li class="list-group-item d-flex justify-content-between bg-light">
+                        <strong>Total</strong>
+                        <strong>${{ carrito.total|floatformat:0 }}</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %} 

@@ -8,8 +8,8 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1><i class="fas fa-users"></i> Gestión de Usuarios</h1>
             {% if user.rol == 'admin' %}
-            <a href="{% url 'usuarios:crear' %}" class="btn btn-success">
-                <i class="fas fa-user-plus"></i> Nuevo Usuario
+            <a href="{% url 'usuarios:crear' %}" class="btn btn-primary">
+                <i class="bi bi-person-plus"></i> Nuevo Usuario
             </a>
             {% endif %}
         </div>
@@ -98,52 +98,20 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Usuario</th>
-                                <th>Nombre Completo</th>
                                 <th>Email</th>
+                                <th>Nombre Completo</th>
                                 <th>Rol</th>
                                 <th>Estado</th>
-                                <th>Último Acceso</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for usuario in usuarios %}
                             <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
-                                             style="width: 40px; height: 40px;">
-                                            {{ usuario.first_name|first|default:usuario.username|first }}
-                                        </div>
-                                        <div>
-                                            <strong>{{ usuario.username }}</strong>
-                                            {% if usuario.is_superuser %}
-                                                <i class="fas fa-crown text-warning" title="Superusuario"></i>
-                                            {% endif %}
-                                            {% if usuario.is_staff %}
-                                                <i class="fas fa-shield-alt text-info" title="Staff"></i>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    {{ usuario.get_full_name|default:"-" }}
-                                    {% if usuario.telefono %}
-                                        <br><small class="text-muted">{{ usuario.telefono }}</small>
-                                    {% endif %}
-                                </td>
-                                <td>{{ usuario.email|default:"-" }}</td>
-                                <td>
-                                    {% if usuario.rol == 'admin' %}
-                                        <span class="badge bg-danger">{{ usuario.get_rol_display }}</span>
-                                    {% elif usuario.rol == 'gerente' %}
-                                        <span class="badge bg-primary">{{ usuario.get_rol_display }}</span>
-                                    {% elif usuario.rol == 'vendedor' %}
-                                        <span class="badge bg-success">{{ usuario.get_rol_display }}</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">{{ usuario.get_rol_display }}</span>
-                                    {% endif %}
-                                </td>
+                                <td>{{ usuario.username }}</td>
+                                <td>{{ usuario.email }}</td>
+                                <td>{{ usuario.get_full_name }}</td>
+                                <td><span class="badge bg-info">{{ usuario.get_rol_display }}</span></td>
                                 <td>
                                     {% if usuario.is_active %}
                                         <span class="badge bg-success">Activo</span>
@@ -152,38 +120,14 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if usuario.last_login %}
-                                        {{ usuario.last_login|date:"d/m/Y H:i" }}
-                                    {% else %}
-                                        <span class="text-muted">Nunca</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="{% url 'usuarios:editar' usuario.pk %}" 
-                                           class="btn btn-outline-warning" title="Editar">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        {% if usuario != user %}
-                                        <button class="btn btn-outline-danger" 
-                                                onclick="toggleUsuario('{{ usuario.pk }}', {{ usuario.is_active|yesno:'false,true' }})"
-                                                title="{% if usuario.is_active %}Desactivar{% else %}Activar{% endif %}">
-                                            {% if usuario.is_active %}
-                                                <i class="fas fa-user-slash"></i>
-                                            {% else %}
-                                                <i class="fas fa-user-check"></i>
-                                            {% endif %}
-                                        </button>
-                                        {% endif %}
-                                    </div>
+                                    <a href="{% url 'usuarios:editar' usuario.pk %}" class="btn btn-sm btn-warning">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </a>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">
-                                    <i class="fas fa-users fa-2x mb-2"></i>
-                                    <div>No se encontraron usuarios con los filtros aplicados</div>
-                                </td>
+                                <td colspan="6" class="text-center">No hay usuarios registrados.</td>
                             </tr>
                             {% endfor %}
                         </tbody>

@@ -18,28 +18,43 @@ from io import BytesIO
 from .models import Venta, DetalleVenta, Factura
 from .forms import VentaForm
 from .serializers import VentaSerializer
-from core.permissions import RolRequeridoMixin
+from core.permissions import RolRequeridoMixin, rol_requerido
 from inventario.models import Producto, MovimientoInventario
+from django.contrib.auth.decorators import login_required
+from usuarios.models import Usuario
+from datetime import datetime
 
-class VentasListView(RolRequeridoMixin, TemplateView):
-    template_name = 'ventas/ventas_list.html'
-    roles_permitidos = ['gerente', 'admin', 'vendedor']
+@login_required
+@rol_requerido(['gerente', 'admin', 'vendedor'])
+def ventas_list_view(request):
+    """
+    Muestra una lista de todas las ventas con filtros.
+    """
+    ventas = Venta.objects.select_related('cliente', 'vendedor').all().order_by('-fecha_venta')
+    
+    # Filtros
+    query = request.GET.get('q')
+    fecha_desde = request.GET.get('fecha_desde')
+    fecha_hasta = request.GET.get('fecha_hasta')
 
-class RegistrarVentaView(RolRequeridoMixin, TemplateView):
-    template_name = 'ventas/registrar_venta.html'
-    roles_permitidos = ['gerente', 'admin', 'vendedor']
+    if query:
+        ventas = ventas.filter(
+            Q(numero_venta__icontains=query) |
+            Q(cliente__first_name__icontains=query) |
+            Q(cliente__last_name__icontains=query) |
+            Q(cliente__username__icontains=query)
+        )
 
-class VentaDetalleView(RolRequeridoMixin, TemplateView):
-    template_name = 'ventas/venta_detalle.html'
-    roles_permitidos = ['gerente', 'admin', 'vendedor']
+    if fecha_desde:
+        ventas = ventas.filter(fecha_venta__date__gte=datetime.strptime(fecha_desde, '%Y-%m-%d').date())
+    
+    if fecha_hasta:
+        ventas = ventas.filter(fecha_venta__date__lte=datetime.strptime(fecha_hasta, '%Y-%m-%d').date())
 
-class POSView(RolRequeridoMixin, TemplateView):
-    template_name = 'ventas/pos_venta.html'
-    roles_permitidos = ['gerente', 'admin', 'vendedor']
-
-class FacturasListView(RolRequeridoMixin, TemplateView):
-    template_name = 'ventas/facturas_list.html'
-    roles_permitidos = ['gerente', 'admin']
+    context = {
+        'ventas': ventas,
+    }
+    return render(request, 'ventas/ventas_list.html', context)
 
 class VentaDetailView(RolRequeridoMixin, DetailView):
     model = Venta
@@ -47,9 +62,8 @@ class VentaDetailView(RolRequeridoMixin, DetailView):
     context_object_name = 'venta'
     roles_permitidos = ['vendedor', 'gerente', 'admin', 'cliente']
     
-    def get_object(self):
-        venta = super().get_object()
-        # Los clientes solo pueden ver sus propias ventas
+    def get_object(self, queryset=None):
+        venta = super().get_object(queryset)
         if self.request.user.rol == 'cliente' and venta.cliente != self.request.user:
             from django.core.exceptions import PermissionDenied
             raise PermissionDenied()

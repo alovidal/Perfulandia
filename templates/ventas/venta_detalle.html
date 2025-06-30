@@ -1,1 +1,96 @@
- 
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Detalle de Venta {{ venta.numero_venta }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Detalle de Venta</h1>
+    <div>
+        <a href="{% url 'ventas:lista' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver a la Lista
+        </a>
+        <a href="{% url 'ventas:factura_pdf' venta.pk %}" class="btn btn-primary" target="_blank">
+            <i class="bi bi-file-earmark-pdf"></i> Descargar Factura
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h4 class="mb-0">Venta N°: {{ venta.numero_venta }}</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <!-- Información General -->
+            <div class="col-md-6 mb-4">
+                <h5>Información General</h5>
+                <p><strong>Fecha:</strong> {{ venta.fecha_venta|date:"d/m/Y H:i" }}</p>
+                <p><strong>Vendedor:</strong> {{ venta.vendedor.username|default:'No especificado' }}</p>
+                <p><strong>Estado:</strong>
+                    {% if venta.estado == 'completada' %}
+                        <span class="badge bg-success">Completada</span>
+                    {% elif venta.estado == 'pendiente' %}
+                        <span class="badge bg-warning text-dark">Pendiente</span>
+                    {% else %}
+                        <span class="badge bg-danger">Anulada</span>
+                    {% endif %}
+                </p>
+            </div>
+            <!-- Datos del Cliente -->
+            <div class="col-md-6 mb-4">
+                <h5>Datos del Cliente</h5>
+                <p><strong>Nombre:</strong> {{ venta.cliente.get_full_name|default:'Cliente General' }}</p>
+                <p><strong>Email:</strong> {{ venta.cliente.email|default:'N/A' }}</p>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Detalle de Productos -->
+        <h5>Productos Vendidos</h5>
+        <div class="table-responsive">
+            <table class="table">
+                <thead class="table-light">
+                    <tr>
+                        <th>Producto</th>
+                        <th class="text-center">Cantidad</th>
+                        <th class="text-end">Precio Unitario</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in venta.detalles.all %}
+                    <tr>
+                        <td>{{ item.producto.nombre }}</td>
+                        <td class="text-center">{{ item.cantidad }}</td>
+                        <td class="text-end">${{ item.precio_unitario|floatformat:0|intcomma }}</td>
+                        <td class="text-end">${{ item.subtotal|floatformat:0|intcomma }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="3" class="text-end">Subtotal:</th>
+                        <th class="text-end">${{ venta.subtotal|floatformat:0|intcomma }}</th>
+                    </tr>
+                    <tr>
+                        <th colspan="3" class="text-end">Impuestos (IVA 19%):</th>
+                        <th class="text-end">${{ venta.impuesto|floatformat:0|intcomma }}</th>
+                    </tr>
+                    {% if venta.descuento > 0 %}
+                    <tr>
+                        <th colspan="3" class="text-end">Descuento:</th>
+                        <th class="text-end text-danger">-${{ venta.descuento|floatformat:0|intcomma }}</th>
+                    </tr>
+                    {% endif %}
+                    <tr class="fs-5 table-light">
+                        <th colspan="3" class="text-end">Total:</th>
+                        <th class="text-end">${{ venta.total|floatformat:0|intcomma }}</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %} 

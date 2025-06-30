@@ -1,8 +1,27 @@
 {% extends 'base.html' %}
 
-{% block title %}Formulario de Usuario{% endblock %}
+{% block title %}
+    {% if object %}Editar Usuario{% else %}Nuevo Usuario{% endif %}
+{% endblock %}
 
 {% block content %}
-<h1>Formulario de Usuario</h1>
-<p>Este formulario servirá para crear o editar un usuario.</p>
+<h1>
+    {% if object %}
+        <i class="bi bi-pencil-square"></i> Editar Usuario: {{ object.username }}
+    {% else %}
+        <i class="bi bi-person-plus"></i> Nuevo Usuario
+    {% endif %}
+</h1>
+
+<div class="card shadow-sm mt-4">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <hr>
+            <button type="submit" class="btn btn-success">Guardar Usuario</button>
+            <a href="{% url 'usuarios:gestion' %}" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
 {% endblock %}

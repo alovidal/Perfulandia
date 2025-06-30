@@ -1,1 +1,81 @@
- 
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Gestión de Ventas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Gestión de Ventas</h1>
+    <a href="{% url 'ventas:registrar' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Registrar Venta
+    </a>
+</div>
+
+<!-- Filtros -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="q" class="form-control" placeholder="Buscar por N° de venta, cliente..." value="{{ request.GET.q|default:'' }}">
+            </div>
+            <div class="col-md-3">
+                <input type="date" name="fecha_desde" class="form-control" value="{{ request.GET.fecha_desde|default:'' }}">
+            </div>
+            <div class="col-md-3">
+                <input type="date" name="fecha_hasta" class="form-control" value="{{ request.GET.fecha_hasta|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100">Filtrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabla de Ventas -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>N° Venta</th>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Estado</th>
+                        <th class="text-end">Total</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for venta in ventas %}
+                    <tr>
+                        <td><strong>{{ venta.numero_venta }}</strong></td>
+                        <td>{{ venta.fecha_venta|date:"d/m/Y H:i" }}</td>
+                        <td>{{ venta.cliente.get_full_name|default:'Cliente General' }}</td>
+                        <td>
+                            {% if venta.estado == 'completada' %}
+                                <span class="badge bg-success">Completada</span>
+                            {% elif venta.estado == 'pendiente' %}
+                                <span class="badge bg-warning text-dark">Pendiente</span>
+                            {% else %}
+                                <span class="badge bg-danger">Anulada</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">${{ venta.total|floatformat:0|intcomma }}</td>
+                        <td>
+                            <a href="{% url 'ventas:detalle' venta.pk %}" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-eye"></i> Ver
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">No se encontraron ventas.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %} 

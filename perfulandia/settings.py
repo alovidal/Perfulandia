@@ -24,6 +24,8 @@ INSTALLED_APPS = [
     'inventario',
     'ventas',
     'reportes',
+    # Django Contrib
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [

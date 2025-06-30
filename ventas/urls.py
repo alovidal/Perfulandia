@@ -4,9 +4,11 @@ from . import views
 app_name = 'ventas'
 
 urlpatterns = [
-    path('', views.VentasListView.as_view(), name='lista'),
-    path('registrar/', views.RegistrarVentaView.as_view(), name='registrar'),
-    path('detalle/<int:pk>/', views.VentaDetalleView.as_view(), name='detalle'),
-    path('pos/', views.POSView.as_view(), name='pos'),
-    path('facturas/', views.FacturasListView.as_view(), name='facturas'),
+    path('', views.ventas_list_view, name='lista'),
+    path('detalle/<uuid:pk>/', views.VentaDetailView.as_view(), name='detalle'),
+    path('factura/<uuid:venta_id>/pdf/', views.generar_factura_pdf, name='factura_pdf'),
+    
+    # La ruta a 'registrar' se ha comentado porque la vista 'RegistrarVentaView' fue eliminada.
+    # Para que el botón "Registrar Venta" funcione, se necesita crear una nueva vista.
+    # path('registrar/', views.tu_nueva_vista_registrar, name='registrar'),
 ]

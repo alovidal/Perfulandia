@@ -3,32 +3,15 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 from .models import Usuario
 
-@admin.register(Usuario)
-class UsuarioAdmin(UserAdmin):
-    list_display = (
-        'username', 
-        'email', 
-        'first_name', 
-        'last_name', 
-        'rol_badge', 
-        'is_active', 
-        'fecha_creacion'
-    )
-    list_filter = ('rol', 'is_active', 'fecha_creacion', 'is_staff')
+class CustomUserAdmin(UserAdmin):
+    model = Usuario
+    list_display = ('username', 'email', 'first_name', 'last_name', 'rol', 'is_staff')
+    list_filter = ('rol', 'is_staff', 'is_superuser', 'groups')
     search_fields = ('username', 'email', 'first_name', 'last_name', 'rut')
     ordering = ('-fecha_creacion',)
     
     fieldsets = UserAdmin.fieldsets + (
-        ('Información Adicional de Perfulandia', {
-            'fields': (
-                'rol', 
-                'telefono', 
-                'direccion', 
-                'rut', 
-                'sucursal', 
-                'activo'
-            )
-        }),
+        ('Información Adicional', {'fields': ('rol', 'telefono', 'direccion')}),
     )
     
     add_fieldsets = UserAdmin.add_fieldsets + (
@@ -57,3 +40,5 @@ class UsuarioAdmin(UserAdmin):
             obj.get_rol_display()
         )
     rol_badge.short_description = 'Rol'
+
+admin.site.register(Usuario, CustomUserAdmin)

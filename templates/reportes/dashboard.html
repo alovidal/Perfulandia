@@ -1,157 +1,119 @@
 {% extends 'base.html' %}
-
-{% block title %}Dashboard de Reportes - Perfulandia SPA{% endblock %}
+{% block title %}Dashboard de Reportes{% endblock %}
+{% load humanize %}
 
 {% block content %}
+<h1 class="mb-4">Dashboard Principal</h1>
+
 <div class="row">
-    <div class="col-12">
-        <h1><i class="fas fa-chart-bar"></i> Dashboard de Reportes</h1>
-        <p class="lead">Análisis y estadísticas del negocio</p>
-        
-        <!-- Estadísticas principales -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card text-center bg-primary text-white">
-                    <div class="card-body">
-                        <i class="fas fa-cash-register fa-3x mb-2"></i>
-                        <h4>{{ stats.ventas_hoy }}</h4>
-                        <p>Ventas Hoy</p>
+    <!-- Card 1: Ventas del Mes -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card text-white bg-primary shadow h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title"><i class="bi bi-currency-dollar"></i> Ventas (Últimos 30 días)</h5>
+                        <p class="card-text fs-4">${{ ventas_mes|floatformat:0|intcomma }}</p>
                     </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center bg-success text-white">
-                    <div class="card-body">
-                        <i class="fas fa-dollar-sign fa-3x mb-2"></i>
-                        <h4>${{ stats.ingresos_mes|floatformat:0 }}</h4>
-                        <p>Ingresos del Mes</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center bg-warning text-white">
-                    <div class="card-body">
-                        <i class="fas fa-exclamation-triangle fa-3x mb-2"></i>
-                        <h4>{{ stats.productos_bajo_stock }}</h4>
-                        <p>Productos Bajo Stock</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center bg-info text-white">
-                    <div class="card-body">
-                        <i class="fas fa-users fa-3x mb-2"></i>
-                        <h4>{{ stats.total_clientes }}</h4>
-                        <p>Total Clientes</p>
-                    </div>
+                    <i class="bi bi-bar-chart-line display-4 opacity-50"></i>
                 </div>
             </div>
         </div>
-        
-        <!-- Accesos rápidos a reportes -->
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-chart-line"></i> Reportes de Ventas</h5>
+    </div>
+
+    <!-- Card 2: Nuevos Clientes -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card text-white bg-success shadow h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title"><i class="bi bi-person-plus"></i> Nuevos Clientes (Últimos 30 días)</h5>
+                        <p class="card-text fs-4">{{ nuevos_clientes }}</p>
                     </div>
-                    <div class="card-body">
-                        <p>Análisis detallado de ventas por período, vendedor y productos.</p>
-                        <a href="{% url 'reportes:ventas' %}" class="btn btn-primary">
-                            <i class="fas fa-chart-line"></i> Ver Reporte
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-boxes"></i> Reportes de Inventario</h5>
-                    </div>
-                    <div class="card-body">
-                        <p>Estado del inventario, productos con bajo stock y valorización.</p>
-                        <a href="{% url 'reportes:inventario' %}" class="btn btn-success">
-                            <i class="fas fa-boxes"></i> Ver Reporte
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-users"></i> Análisis de Clientes</h5>
-                    </div>
-                    <div class="card-body">
-                        <p>Comportamiento de compra y segmentación de clientes.</p>
-                        <button class="btn btn-info" disabled>
-                            <i class="fas fa-users"></i> Próximamente
-                        </button>
-                    </div>
+                    <i class="bi bi-people display-4 opacity-50"></i>
                 </div>
             </div>
         </div>
-        
-        <!-- Productos más vendidos -->
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-trophy"></i> Productos Más Vendidos (Últimos 30 días)</h5>
+    </div>
+
+    <!-- Card 3: Productos Bajo Stock -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card text-white bg-warning shadow h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title"><i class="bi bi-box-seam"></i> Productos Bajo Stock</h5>
+                        <p class="card-text fs-4">{{ productos_bajo_stock }}</p>
                     </div>
-                    <div class="card-body">
-                        {% if productos_vendidos %}
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Producto</th>
-                                            <th class="text-end">Cantidad</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for item in productos_vendidos %}
-                                            <tr>
-                                                <td>{{ item.producto__nombre }}</td>
-                                                <td class="text-end">{{ item.total_vendido }}</td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        {% else %}
-                            <p class="text-muted">No hay datos de ventas disponibles.</p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-info-circle"></i> Resumen General</h5>
-                    </div>
-                    <div class="card-body">
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex justify-content-between">
-                                <span>Ventas del día:</span>
-                                <strong>{{ stats.ventas_hoy }}</strong>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between">
-                                <span>Ingresos del día:</span>
-                                <strong>${{ stats.ingresos_hoy|floatformat:0 }}</strong>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between">
-                                <span>Productos activos:</span>
-                                <strong>{{ stats.total_productos }}</strong>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between">
-                                <span>Pedidos pendientes:</span>
-                                <strong class="text-warning">{{ stats.pedidos_pendientes }}</strong>
-                            </li>
-                        </ul>
-                    </div>
+                     <i class="bi bi-exclamation-triangle display-4 opacity-50"></i>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<div class="row">
+    <!-- Columna del Gráfico -->
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Ventas de los Últimos 7 Días</h5>
+                <canvas id="graficoVentas"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Columna de Actividad Reciente -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Actividad Reciente</h5>
+                <ul class="list-group list-group-flush">
+                    {% for venta in ultimas_ventas %}
+                    <li class="list-group-item">
+                        <i class="bi bi-cart-check text-success"></i> Nueva venta a {{ venta.cliente.get_full_name|default:'Cliente General' }}
+                        <span class="text-muted d-block small">{{ venta.fecha_venta|naturaltime }}</span>
+                    </li>
+                    {% endfor %}
+                    {% for usuario in ultimos_usuarios %}
+                    <li class="list-group-item">
+                        <i class="bi bi-person-plus-fill text-info"></i> Nuevo usuario: {{ usuario.username }}
+                        <span class="text-muted d-block small">{{ usuario.date_joined|naturaltime }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Incluir Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('graficoVentas').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ labels_grafico|safe }},
+            datasets: [{
+                label: 'Ventas ($)',
+                data: {{ data_grafico|safe }},
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
+
 {% endblock %}

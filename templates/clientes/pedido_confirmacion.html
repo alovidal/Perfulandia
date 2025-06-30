@@ -3,7 +3,15 @@
 {% block title %}Pedido Confirmado{% endblock %}
 
 {% block content %}
-<h1>¡Gracias por tu compra!</h1>
-<p>Tu pedido ha sido confirmado.</p>
-<p>Aquí se mostrará un resumen del pedido y la información de envío.</p>
+<div class="text-center py-5">
+    <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
+    <h1 class="mt-3">¡Gracias por tu compra!</h1>
+    <p class="lead">Hemos recibido tu pedido y ya lo estamos procesando.</p>
+    <hr>
+    <p>Recibirás un correo electrónico de confirmación con los detalles de tu pedido.</p>
+    <div class="mt-4">
+        <a href="{% url 'clientes:mis_pedidos' %}" class="btn btn-primary">Ver mis pedidos</a>
+        <a href="{% url 'clientes:catalogo' %}" class="btn btn-outline-secondary">Seguir comprando</a>
+    </div>
+</div>
 {% endblock %} 

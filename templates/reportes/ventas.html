@@ -1,251 +1,94 @@
 {% extends 'base.html' %}
+{% load humanize %}
 
-{% block title %}Reporte de Ventas - Perfulandia SPA{% endblock %}
+{% block title %}Reporte de Ventas{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <h1><i class="fas fa-chart-line"></i> Reporte de Ventas</h1>
-        <p class="text-muted">Análisis detallado del desempeño de ventas</p>
-        
-        <!-- Filtros de período -->
-        <div class="card mb-4">
+<h1 class="mb-4">Reporte de Ventas</h1>
+
+<!-- Filtros de período -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Filtrar por Fecha</h5>
+        <form method="get" class="row g-3">
+            <div class="col-md-5">
+                <label for="fecha_desde" class="form-label">Desde</label>
+                <input type="date" class="form-control" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde|date:'Y-m-d'|default:'' }}">
+            </div>
+            <div class="col-md-5">
+                <label for="fecha_hasta" class="form-label">Hasta</label>
+                <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta|date:'Y-m-d'|default:'' }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-filter"></i> Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- KPIs del período -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center h-100">
             <div class="card-body">
-                <form method="get" class="row g-3">
-                    <div class="col-md-3">
-                        <label for="fecha_desde" class="form-label">Desde</label>
-                        <input type="date" class="form-control" id="fecha_desde" name="fecha_desde" 
-                               value="{{ fecha_desde|date:'Y-m-d' }}">
-                    </div>
-                    <div class="col-md-3">
-                        <label for="fecha_hasta" class="form-label">Hasta</label>
-                        <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta" 
-                               value="{{ fecha_hasta|date:'Y-m-d' }}">
-                    </div>
-                    <div class="col-md-3">
-                        <label for="sucursal" class="form-label">Sucursal</label>
-                        <select class="form-select" id="sucursal" name="sucursal">
-                            <option value="">Todas</option>
-                            <option value="Santiago Centro">Santiago Centro</option>
-                            <option value="Las Condes">Las Condes</option>
-                            <option value="Providencia">Providencia</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">&nbsp;</label>
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-sync"></i> Actualizar
-                        </button>
-                    </div>
-                </form>
+                <h6 class="text-muted">Ingresos Totales</h6>
+                <p class="fs-4 fw-bold text-success mb-0">${{ total_ingresos|floatformat:0|intcomma }}</p>
             </div>
         </div>
-        
-        <!-- KPIs principales -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card text-center border-primary">
-                    <div class="card-body">
-                        <div class="text-primary mb-2">
-                            <i class="fas fa-shopping-cart fa-2x"></i>
-                        </div>
-                        <h3 class="text-primary">{{ total_ventas }}</h3>
-                        <p class="text-muted mb-0">Total Ventas</p>
-                        <small class="text-success">+12% vs período anterior</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center border-success">
-                    <div class="card-body">
-                        <div class="text-success mb-2">
-                            <i class="fas fa-dollar-sign fa-2x"></i>
-                        </div>
-                        <h3 class="text-success">${{ total_ingresos|floatformat:0 }}</h3>
-                        <p class="text-muted mb-0">Ingresos Totales</p>
-                        <small class="text-success">+8% vs período anterior</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center border-info">
-                    <div class="card-body">
-                        <div class="text-info mb-2">
-                            <i class="fas fa-calculator fa-2x"></i>
-                        </div>
-                        <h3 class="text-info">${{ promedio_venta|floatformat:0 }}</h3>
-                        <p class="text-muted mb-0">Ticket Promedio</p>
-                        <small class="text-danger">-3% vs período anterior</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center border-warning">
-                    <div class="card-body">
-                        <div class="text-warning mb-2">
-                            <i class="fas fa-boxes fa-2x"></i>
-                        </div>
-                        <h3 class="text-warning">{{ total_productos }}</h3>
-                        <p class="text-muted mb-0">Productos Vendidos</p>
-                        <small class="text-success">+15% vs período anterior</small>
-                    </div>
-                </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Total Ventas</h6>
+                <p class="fs-4 fw-bold text-primary mb-0">{{ total_ventas }}</p>
             </div>
         </div>
-        
-        <!-- Gráficos -->
-        <div class="row mb-4">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-chart-area"></i> Evolución de Ventas</h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="grafico-ventas" height="100"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-chart-pie"></i> Ventas por Método de Pago</h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="grafico-metodos-pago"></canvas>
-                        <div class="mt-3">
-                            <div class="d-flex justify-content-between">
-                                <span>Efectivo:</span>
-                                <strong>45%</strong>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span>Tarjeta:</span>
-                                <strong>40%</strong>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span>Transferencia:</span>
-                                <strong>15%</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Top productos -->
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-trophy"></i> Productos Más Vendidos</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Producto</th>
-                                        <th>Cantidad</th>
-                                        <th>Ingresos</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for producto in productos_top %}
-                                    <tr>
-                                        <td>{{ forloop.counter }}</td>
-                                        <td>{{ producto.nombre }}</td>
-                                        <td><span class="badge bg-primary">{{ producto.cantidad_vendida }}</span></td>
-                                        <td class="text-success">${{ producto.ingresos|floatformat:0 }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-user-tie"></i> Rendimiento por Vendedor</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Vendedor</th>
-                                        <th>Ventas</th>
-                                        <th>Ingresos</th>
-                                        <th>Promedio</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for vendedor in vendedores_top %}
-                                    <tr>
-                                        <td>{{ vendedor.nombre }}</td>
-                                        <td><span class="badge bg-info">{{ vendedor.total_ventas }}</span></td>
-                                        <td class="text-success">${{ vendedor.ingresos|floatformat:0 }}</td>
-                                        <td>${{ vendedor.promedio|floatformat:0 }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Ticket Promedio</h6>
+                <p class="fs-4 fw-bold text-info mb-0">${{ promedio_venta|floatformat:0|intcomma }}</p>
             </div>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-// Gráfico de evolución de ventas
-const ctx1 = document.getElementById('grafico-ventas').getContext('2d');
-new Chart(ctx1, {
-    type: 'line',
-    data: {
-        labels: {{ fechas_grafico|safe }},
-        datasets: [{
-            label: 'Ventas ($)',
-            data: {{ valores_grafico|safe }},
-            borderColor: 'rgb(75, 192, 192)',
-            backgroundColor: 'rgba(75, 192, 192, 0.1)',
-            tension: 0.4
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    callback: function(value) {
-                        return '$' + value.toLocaleString();
-                    }
-                }
-            }
-        }
-    }
-});
-
-// Gráfico de métodos de pago
-const ctx2 = document.getElementById('grafico-metodos-pago').getContext('2d');
-new Chart(ctx2, {
-    type: 'doughnut',
-    data: {
-        labels: ['Efectivo', 'Tarjeta', 'Transferencia'],
-        datasets: [{
-            data: [45, 40, 15],
-            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false
-    }
-});
-</script>
+<!-- Tabla de Ventas -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title">Ventas del Período</h5>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>N° Venta</th>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Total</th>
+                        <th>Vendedor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for venta in ventas %}
+                    <tr>
+                        <td><strong>{{ venta.numero_venta }}</strong></td>
+                        <td>{{ venta.fecha_venta|date:"d/m/Y H:i" }}</td>
+                        <td>{{ venta.cliente.get_full_name|default:'Cliente General' }}</td>
+                        <td class="text-end">${{ venta.total|floatformat:0|intcomma }}</td>
+                        <td>{{ venta.vendedor.username|default:'N/A' }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">No se encontraron ventas para el período seleccionado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock %}
 

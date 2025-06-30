@@ -12,44 +12,48 @@ from core.permissions import rol_requerido, RolRequeridoMixin
 from django.views.generic import TemplateView
 
 @login_required
-@rol_requerido(['gerente', 'admin'])
+@rol_requerido(['gerente', 'admin', 'vendedor'])
 def dashboard_view(request):
     """Dashboard principal de reportes"""
     hoy = timezone.now().date()
-    hace_30_dias = hoy - timedelta(days=30)
+    hace_un_mes = hoy - timedelta(days=30)
+    hace_7_dias = hoy - timedelta(days=7)
+
+    # --- Métricas Principales ---
+    ventas_mes = Venta.objects.filter(fecha_venta__date__gte=hace_un_mes).aggregate(
+        total=Sum('total')
+    )['total'] or 0
     
-    # Estadísticas generales
-    stats = {
-        'ventas_hoy': Venta.objects.filter(fecha_venta__date=hoy).count(),
-        'ventas_mes': Venta.objects.filter(fecha_venta__date__gte=hace_30_dias).count(),
-        'ingresos_hoy': Venta.objects.filter(
-            fecha_venta__date=hoy,
-            estado='completada'
-        ).aggregate(total=Sum('total'))['total'] or 0,
-        'ingresos_mes': Venta.objects.filter(
-            fecha_venta__date__gte=hace_30_dias,
-            estado='completada'
-        ).aggregate(total=Sum('total'))['total'] or 0,
-        'productos_bajo_stock': Producto.objects.filter(
-            stock__lte=F('stock_minimo')
-        ).count(),
-        'total_productos': Producto.objects.filter(activo=True).count(),
-        'pedidos_pendientes': Pedido.objects.filter(estado='pendiente').count(),
-        'total_clientes': Usuario.objects.filter(rol='cliente').count(),
-    }
-    
-    # Productos más vendidos (últimos 30 días)
-    productos_vendidos = DetalleVenta.objects.filter(
-        venta__fecha_venta__date__gte=hace_30_dias
-    ).values(
-        'producto__nombre'
-    ).annotate(
-        total_vendido=Sum('cantidad')
-    ).order_by('-total_vendido')[:5]
-    
+    nuevos_clientes = Usuario.objects.filter(
+        rol='cliente',
+        date_joined__date__gte=hace_un_mes
+    ).count()
+
+    productos_bajo_stock = Producto.objects.filter(stock__lte=F('stock_minimo')).count()
+
+    # --- Datos para el Gráfico de Ventas (últimos 7 días) ---
+    ventas_diarias = Venta.objects.filter(
+        fecha_venta__date__gte=hace_7_dias
+    ).values('fecha_venta__date').annotate(
+        total_dia=Sum('total')
+    ).order_by('fecha_venta__date')
+
+    # Formatear para el gráfico
+    labels_grafico = [v['fecha_venta__date'].strftime('%d-%m') for v in ventas_diarias]
+    data_grafico = [float(v['total_dia']) for v in ventas_diarias]
+
+    # --- Actividad Reciente ---
+    ultimas_ventas = Venta.objects.select_related('cliente').order_by('-fecha_venta')[:3]
+    ultimos_usuarios = Usuario.objects.filter(rol='cliente').order_by('-date_joined')[:2]
+
     context = {
-        'stats': stats,
-        'productos_vendidos': productos_vendidos,
+        'ventas_mes': ventas_mes,
+        'nuevos_clientes': nuevos_clientes,
+        'productos_bajo_stock': productos_bajo_stock,
+        'labels_grafico': labels_grafico,
+        'data_grafico': data_grafico,
+        'ultimas_ventas': ultimas_ventas,
+        'ultimos_usuarios': ultimos_usuarios,
     }
     
     return render(request, 'reportes/dashboard.html', context)
@@ -122,10 +126,6 @@ def reporte_inventario(request):
     }
     
     return render(request, 'reportes/inventario.html', context)
-
-class DashboardView(RolRequeridoMixin, TemplateView):
-    template_name = 'reportes/dashboard.html'
-    roles_permitidos = ['gerente', 'admin']
 
 class ReporteVentasView(RolRequeridoMixin, TemplateView):
     template_name = 'reportes/ventas.html'

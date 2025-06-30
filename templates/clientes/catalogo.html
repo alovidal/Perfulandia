@@ -55,13 +55,15 @@
                         <div class="card-body">
                             <h5 class="card-title">{{ producto.nombre }}</h5>
                             <p class="card-text text-muted">{{ producto.categoria.nombre }}</p>
-                            <h4 class="card-text text-end">${{ producto.precio|floatformat:0 }}</h4>
-                        </div>
-                        <div class="card-footer text-center">
-                            <a href="#" class="btn btn-primary">Ver Detalles</a>
-                            <button class="btn btn-success">
-                                <i class="bi bi-cart-plus"></i> Añadir
-                            </button>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold fs-5 text-primary">${{ producto.precio|floatformat:0 }}</span>
+                                <form action="{% url 'clientes:agregar_al_carrito' producto.id %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-cart-plus"></i> Añadir
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>

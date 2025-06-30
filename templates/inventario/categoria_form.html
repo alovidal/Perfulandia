@@ -1,8 +1,27 @@
 {% extends 'base.html' %}
 
-{% block title %}Formulario de Categoría{% endblock %}
+{% block title %}
+    {% if object %}Editar Categoría{% else %}Nueva Categoría{% endif %}
+{% endblock %}
 
 {% block content %}
-<h1>Formulario de Categoría</h1>
-<p>Formulario para crear o editar una categoría de producto.</p>
+<h1>
+    {% if object %}
+        <i class="bi bi-pencil-square"></i> Editar Categoría
+    {% else %}
+        <i class="bi bi-plus-circle"></i> Nueva Categoría
+    {% endif %}
+</h1>
+
+<div class="card shadow-sm mt-4">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <hr>
+            <button type="submit" class="btn btn-success">Guardar Categoría</button>
+            <a href="{% url 'inventario:categorias' %}" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
 {% endblock %} 

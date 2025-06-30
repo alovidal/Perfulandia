@@ -1,159 +1,51 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}
-    {% if object %}Editar Producto{% else %}Nuevo Producto{% endif %} - Perfulandia SPA
+    {% if object %}
+        Editar Producto
+    {% else %}
+        Crear Nuevo Producto
+    {% endif %}
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8 mx-auto">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h4>
-                    <i class="fas fa-box"></i> 
-                    {% if object %}Editar Producto{% else %}Nuevo Producto{% endif %}
-                </h4>
-            </div>
-            <div class="card-body">
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="{{ form.codigo.id_for_label }}" class="form-label">
-                                    <i class="fas fa-barcode"></i> Código del Producto *
-                                </label>
-                                {{ form.codigo }}
-                                {% if form.codigo.errors %}
-                                    <div class="text-danger">{{ form.codigo.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-8">
-                            <div class="mb-3">
-                                <label for="{{ form.nombre.id_for_label }}" class="form-label">
-                                    <i class="fas fa-tag"></i> Nombre del Producto *
-                                </label>
-                                {{ form.nombre }}
-                                {% if form.nombre.errors %}
-                                    <div class="text-danger">{{ form.nombre.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.descripcion.id_for_label }}" class="form-label">
-                            <i class="fas fa-align-left"></i> Descripción
-                        </label>
-                        {{ form.descripcion }}
-                        <div class="form-text">Describe las características principales del producto</div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="{{ form.categoria.id_for_label }}" class="form-label">
-                                    <i class="fas fa-folder"></i> Categoría *
-                                </label>
-                                {{ form.categoria }}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="{{ form.precio.id_for_label }}" class="form-label">
-                                    <i class="fas fa-dollar-sign"></i> Precio *
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    {{ form.precio }}
-                                </div>
-                                {% if form.precio.errors %}
-                                    <div class="text-danger">{{ form.precio.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="{{ form.stock.id_for_label }}" class="form-label">
-                                    <i class="fas fa-boxes"></i> Stock Actual *
-                                </label>
-                                {{ form.stock }}
-                                {% if form.stock.errors %}
-                                    <div class="text-danger">{{ form.stock.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="{{ form.stock_minimo.id_for_label }}" class="form-label">
-                                    <i class="fas fa-exclamation-triangle"></i> Stock Mínimo *
-                                </label>
-                                {{ form.stock_minimo }}
-                                <div class="form-text">Cantidad mínima antes de alerta de reabastecimiento</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="mb-3">
-                                <label for="{{ form.imagen.id_for_label }}" class="form-label">
-                                    <i class="fas fa-image"></i> Imagen del Producto
-                                </label>
-                                {{ form.imagen }}
-                                <div class="form-text">Sube una imagen del producto (opcional)</div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    {{ form.activo }}
-                                    <label class="form-check-label" for="{{ form.activo.id_for_label }}">
-                                        <i class="fas fa-eye"></i> Producto Activo
-                                    </label>
-                                </div>
-                                <div class="form-text">Los productos inactivos no aparecen en el catálogo</div>
-                            </div>
-                        </div>
-                    </div>
-                    
+<h1>
+    {% if object %}
+        <i class="bi bi-pencil-square"></i> Editar Producto
+    {% else %}
+        <i class="bi bi-plus-circle"></i> Crear Nuevo Producto
+    {% endif %}
+</h1>
+
+<div class="card shadow-sm mt-4">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-8">
+                    {{ form.as_p }}
+                </div>
+                <div class="col-md-4">
+                    <h4>Imagen del Producto</h4>
                     {% if object.imagen %}
-                    <div class="mb-3">
-                        <label class="form-label">Imagen Actual</label>
-                        <div>
-                            <img src="{{ object.imagen.url }}" alt="{{ object.nombre }}" 
-                                 class="img-thumbnail" style="max-width: 200px;">
-                        </div>
-                    </div>
+                        <img src="{{ object.imagen.url }}" class="img-fluid rounded mb-2" alt="Imagen actual">
+                    {% else %}
+                        <img src="{% static 'img/placeholder.png' %}" class="img-fluid rounded mb-2" alt="Sin imagen">
                     {% endif %}
-                    
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i>
-                        <strong>Nota:</strong> Los campos marcados con (*) son obligatorios.
-                    </div>
-                    
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save"></i> 
-                            {% if object %}Actualizar Producto{% else %}Crear Producto{% endif %}
-                        </button>
-                        <a href="{% url 'inventario:productos' %}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Volver a Lista
-                        </a>
-                        {% if object %}
-                        <a href="{% url 'inventario:producto_detalle' object.pk %}" class="btn btn-outline-info">
-                            <i class="fas fa-eye"></i> Ver Detalles
-                        </a>
-                        {% endif %}
-                    </div>
-                </form>
+                    {{ form.imagen }}
+                </div>
             </div>
-        </div>
+
+            <hr>
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> Guardar Producto
+            </button>
+            <a href="{% url 'inventario:productos' %}" class="btn btn-secondary">
+                Cancelar
+            </a>
+        </form>
     </div>
 </div>
 {% endblock %}
