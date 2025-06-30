@@ -8,7 +8,8 @@ from ventas.models import Venta, DetalleVenta
 from inventario.models import Producto, MovimientoInventario
 from clientes.models import Pedido
 from usuarios.models import Usuario
-from core.permissions import rol_requerido
+from core.permissions import rol_requerido, RolRequeridoMixin
+from django.views.generic import TemplateView
 
 @login_required
 @rol_requerido(['gerente', 'admin'])
@@ -121,3 +122,23 @@ def reporte_inventario(request):
     }
     
     return render(request, 'reportes/inventario.html', context)
+
+class DashboardView(RolRequeridoMixin, TemplateView):
+    template_name = 'reportes/dashboard.html'
+    roles_permitidos = ['gerente', 'admin']
+
+class ReporteVentasView(RolRequeridoMixin, TemplateView):
+    template_name = 'reportes/ventas.html'
+    roles_permitidos = ['gerente', 'admin']
+
+class ReporteInventarioView(RolRequeridoMixin, TemplateView):
+    template_name = 'reportes/inventario.html'
+    roles_permitidos = ['gerente', 'admin']
+
+class ReporteClientesView(RolRequeridoMixin, TemplateView):
+    template_name = 'reportes/clientes.html'
+    roles_permitidos = ['gerente', 'admin']
+
+class ReporteFinancieroView(RolRequeridoMixin, TemplateView):
+    template_name = 'reportes/financiero.html'
+    roles_permitidos = ['gerente', 'admin']

@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView
 from django.urls import reverse_lazy
 from django.http import JsonResponse
 from django.db.models import Q, F
@@ -147,3 +147,32 @@ class ProductoViewSet(viewsets.ModelViewSet):
             'stock_actual': producto.stock,
             'cantidad_ajustada': cantidad
         })
+
+class CategoriasListView(RolRequeridoMixin, ListView):
+    model = Categoria
+    template_name = 'inventario/categorias_list.html'
+    context_object_name = 'categorias'
+    roles_permitidos = ['gerente', 'admin']
+
+class CategoriaCreateView(RolRequeridoMixin, CreateView):
+    model = Categoria
+    form_class = CategoriaForm
+    template_name = 'inventario/categoria_form.html'
+    success_url = reverse_lazy('inventario:categorias')
+    roles_permitidos = ['gerente', 'admin']
+
+class CategoriaUpdateView(RolRequeridoMixin, UpdateView):
+    model = Categoria
+    form_class = CategoriaForm
+    template_name = 'inventario/categoria_form.html'
+    success_url = reverse_lazy('inventario:categorias')
+    roles_permitidos = ['gerente', 'admin']
+
+class StockBajoView(RolRequeridoMixin, ListView):
+    model = Producto
+    template_name = 'inventario/stock_bajo.html'
+    context_object_name = 'productos'
+    roles_permitidos = ['gerente', 'admin', 'vendedor']
+    
+    def get_queryset(self):
+        return Producto.objects.filter(stock__lte=F('stock_minimo'), activo=True)

@@ -30,6 +30,22 @@
                 </ul>
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     {% if user.is_authenticated %}
+                        {% if user.rol in 'admin,gerente,vendedor' %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Administración
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminMenu">
+                                    <li><a class="dropdown-item" href="{% url 'inventario:productos' %}">Gestión de Inventario</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'ventas:lista' %}">Gestión de Ventas</a></li>
+                                    {% if user.rol in 'admin,gerente' %}
+                                        <li><a class="dropdown-item" href="{% url 'reportes:dashboard' %}">Reportes</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'usuarios:gestion' %}">Gestión de Usuarios</a></li>
+                                    {% endif %}
+                                </ul>
+                            </li>
+                        {% endif %}
+
                         {% if user.rol == 'cliente' %}
                             <li class="nav-item">
                                 <a href="{% url 'clientes:carrito' %}" class="nav-link">

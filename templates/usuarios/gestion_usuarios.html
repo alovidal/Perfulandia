@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Usuarios - Perfulandia SPA{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-users"></i> Gestión de Usuarios</h1>
+            {% if user.rol == 'admin' %}
+            <a href="{% url 'usuarios:crear' %}" class="btn btn-success">
+                <i class="fas fa-user-plus"></i> Nuevo Usuario
+            </a>
+            {% endif %}
+        </div>
+        
+        <!-- Filtros -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="busqueda" class="form-label">Buscar</label>
+                        <input type="text" class="form-control" id="busqueda" name="busqueda" 
+                               value="{{ request.GET.busqueda }}" placeholder="Nombre, usuario, email...">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="rol" class="form-label">Rol</label>
+                        <select class="form-select" id="rol" name="rol">
+                            <option value="">Todos</option>
+                            <option value="admin" {% if request.GET.rol == 'admin' %}selected{% endif %}>Administrador</option>
+                            <option value="gerente" {% if request.GET.rol == 'gerente' %}selected{% endif %}>Gerente</option>
+                            <option value="vendedor" {% if request.GET.rol == 'vendedor' %}selected{% endif %}>Vendedor</option>
+                            <option value="cliente" {% if request.GET.rol == 'cliente' %}selected{% endif %}>Cliente</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="activo" class="form-label">Estado</label>
+                        <select class="form-select" id="activo" name="activo">
+                            <option value="">Todos</option>
+                            <option value="1" {% if request.GET.activo == "1" %}selected{% endif %}>Activos</option>
+                            <option value="0" {% if request.GET.activo == "0" %}selected{% endif %}>Inactivos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search"></i> Filtrar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Estadísticas rápidas -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h4 class="text-primary">{{ total_usuarios }}</h4>
+                        <p class="text-muted mb-0">Total Usuarios</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h4 class="text-success">{{ usuarios_activos }}</h4>
+                        <p class="text-muted mb-0">Usuarios Activos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h4 class="text-info">{{ nuevos_mes }}</h4>
+                        <p class="text-muted mb-0">Nuevos este Mes</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h4 class="text-warning">{{ clientes_total }}</h4>
+                        <p class="text-muted mb-0">Total Clientes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lista de usuarios -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Usuarios Registrados ({{ usuarios.count }})</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Nombre Completo</th>
+                                <th>Email</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th>Último Acceso</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for usuario in usuarios %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
+                                             style="width: 40px; height: 40px;">
+                                            {{ usuario.first_name|first|default:usuario.username|first }}
+                                        </div>
+                                        <div>
+                                            <strong>{{ usuario.username }}</strong>
+                                            {% if usuario.is_superuser %}
+                                                <i class="fas fa-crown text-warning" title="Superusuario"></i>
+                                            {% endif %}
+                                            {% if usuario.is_staff %}
+                                                <i class="fas fa-shield-alt text-info" title="Staff"></i>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {{ usuario.get_full_name|default:"-" }}
+                                    {% if usuario.telefono %}
+                                        <br><small class="text-muted">{{ usuario.telefono }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ usuario.email|default:"-" }}</td>
+                                <td>
+                                    {% if usuario.rol == 'admin' %}
+                                        <span class="badge bg-danger">{{ usuario.get_rol_display }}</span>
+                                    {% elif usuario.rol == 'gerente' %}
+                                        <span class="badge bg-primary">{{ usuario.get_rol_display }}</span>
+                                    {% elif usuario.rol == 'vendedor' %}
+                                        <span class="badge bg-success">{{ usuario.get_rol_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ usuario.get_rol_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if usuario.is_active %}
+                                        <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactivo</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if usuario.last_login %}
+                                        {{ usuario.last_login|date:"d/m/Y H:i" }}
+                                    {% else %}
+                                        <span class="text-muted">Nunca</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'usuarios:editar' usuario.pk %}" 
+                                           class="btn btn-outline-warning" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if usuario != user %}
+                                        <button class="btn btn-outline-danger" 
+                                                onclick="toggleUsuario('{{ usuario.pk }}', {{ usuario.is_active|yesno:'false,true' }})"
+                                                title="{% if usuario.is_active %}Desactivar{% else %}Activar{% endif %}">
+                                            {% if usuario.is_active %}
+                                                <i class="fas fa-user-slash"></i>
+                                            {% else %}
+                                                <i class="fas fa-user-check"></i>
+                                            {% endif %}
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="fas fa-users fa-2x mb-2"></i>
+                                    <div>No se encontraron usuarios con los filtros aplicados</div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Paginación -->
+        {% if is_paginated %}
+        <nav aria-label="Paginación de usuarios" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">Primera</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleUsuario(userId, activar) {
+    const accion = activar ? 'activar' : 'desactivar';
+    if (confirm(`¿Estás seguro de que quieres ${accion} este usuario?`)) {
+        fetch(`/usuarios/toggle/${userId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify({activo: activar})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error al actualizar el usuario');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

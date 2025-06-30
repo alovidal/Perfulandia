@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Finalizar Compra - Perfulandia SPA{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-shipping-fast"></i> Información de Entrega</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" id="checkout-form">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.direccion_entrega.id_for_label }}" class="form-label">
+                            <i class="fas fa-map-marker-alt"></i> Dirección de Entrega *
+                        </label>
+                        {{ form.direccion_entrega }}
+                        <div class="form-text">Especifica la dirección completa donde quieres recibir tu pedido</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.telefono_contacto.id_for_label }}" class="form-label">
+                            <i class="fas fa-phone"></i> Teléfono de Contacto *
+                        </label>
+                        {{ form.telefono_contacto }}
+                        <div class="form-text">Número donde podamos contactarte para coordinar la entrega</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.notas.id_for_label }}" class="form-label">
+                            <i class="fas fa-comment"></i> Instrucciones Especiales
+                        </label>
+                        {{ form.notas }}
+                        <div class="form-text">Información adicional para el repartidor (opcional)</div>
+                    </div>
+                    
+                    <!-- Método de pago -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-credit-card"></i> Método de Pago
+                        </label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card border-2" id="pago-tarjeta" onclick="seleccionarPago('tarjeta')">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-credit-card fa-2x text-primary mb-2"></i>
+                                        <h6>Tarjeta de Crédito/Débito</h6>
+                                        <small class="text-muted">Pago seguro en línea</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-2" id="pago-transferencia" onclick="seleccionarPago('transferencia')">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-university fa-2x text-success mb-2"></i>
+                                        <h6>Transferencia Bancaria</h6>
+                                        <small class="text-muted">Pago contra entrega</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="metodo_pago" name="metodo_pago" value="tarjeta">
+                    </div>
+                    
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Resumen del pedido -->
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-receipt"></i> Resumen del Pedido</h5>
+            </div>
+            <div class="card-body">
+                {% for item in carrito.items.all %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <div class="fw-bold">{{ item.producto.nombre }}</div>
+                        <small class="text-muted">Cantidad: {{ item.cantidad }}</small>
+                    </div>
+                    <div class="text-end">
+                        <div>${{ item.subtotal|floatformat:0 }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <hr>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal:</span>
+                    <span>${{ carrito.total|floatformat:0 }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Envío:</span>
+                    <span class="text-success">Gratis</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>IVA (19%):</span>
+                    <span>${{ carrito.total|mul:0.19|floatformat:0 }}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-3">
+                    <strong>Total a Pagar:</strong>
+                    <strong class="text-primary">${{ carrito.total|mul:1.19|floatformat:0 }}</strong>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" form="checkout-form" class="btn btn-success btn-lg">
+                        <i class="fas fa-check-circle"></i> Confirmar Pedido
+                    </button>
+                    <a href="{% url 'clientes:carrito' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver al Carrito
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Garantías -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <i class="fas fa-shipping-fast text-primary mb-2"></i>
+                        <small>Envío Gratis</small>
+                    </div>
+                    <div class="col-4">
+                        <i class="fas fa-shield-alt text-success mb-2"></i>
+                        <small>Compra Segura</small>
+                    </div>
+                    <div class="col-4">
+                        <i class="fas fa-undo text-info mb-2"></i>
+                        <small>Devoluciones</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function seleccionarPago(metodo) {
+    // Remover selección anterior
+    document.querySelectorAll('.card').forEach(card => {
+        card.classList.remove('border-primary');
+    });
+    
+    // Agregar selección actual
+    document.getElementById(`pago-${metodo}`).classList.add('border-primary');
+    document.getElementById('metodo_pago').value = metodo;
+}
+
+// Seleccionar tarjeta por defecto
+document.addEventListener('DOMContentLoaded', function() {
+    seleccionarPago('tarjeta');
+});
+</script>
+{% endblock %}

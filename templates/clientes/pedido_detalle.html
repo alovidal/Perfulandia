@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}Pedido {{ pedido.numero_pedido }} - Perfulandia SPA{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4><i class="fas fa-receipt"></i> Detalles del Pedido</h4>
+                    {% if pedido.estado == 'pendiente' %}
+                        <span class="badge bg-warning fs-6">{{ pedido.get_estado_display }}</span>
+                    {% elif pedido.estado == 'procesando' %}
+                        <span class="badge bg-info fs-6">{{ pedido.get_estado_display }}</span>
+                    {% elif pedido.estado == 'enviado' %}
+                        <span class="badge bg-primary fs-6">{{ pedido.get_estado_display }}</span>
+                    {% elif pedido.estado == 'entregado' %}
+                        <span class="badge bg-success fs-6">{{ pedido.get_estado_display }}</span>
+                    {% else %}
+                        <span class="badge bg-danger fs-6">{{ pedido.get_estado_display }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Información del pedido -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">NÚMERO DE PEDIDO</h6>
+                        <p class="fw-bold">{{ pedido.numero_pedido }}</p>
+                        
+                        <h6 class="text-muted">FECHA DEL PEDIDO</h6>
+                        <p>{{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</p>
+                        
+                        {% if pedido.fecha_entrega_estimada %}
+                        <h6 class="text-muted">ENTREGA ESTIMADA</h6>
+                        <p>{{ pedido.fecha_entrega_estimada|date:"d/m/Y" }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">DIRECCIÓN DE ENTREGA</h6>
+                        <p>{{ pedido.direccion_entrega }}</p>
+                        
+                        <h6 class="text-muted">TELÉFONO DE CONTACTO</h6>
+                        <p>{{ pedido.telefono_contacto }}</p>
+                        
+                        {% if pedido.notas %}
+                        <h6 class="text-muted">NOTAS</h6>
+                        <p>{{ pedido.notas }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Seguimiento del pedido -->
+                <div class="mb-4">
+                    <h5>Estado del Pedido</h5>
+                    <div class="progress" style="height: 25px;">
+                        {% if pedido.estado == 'pendiente' %}
+                            <div class="progress-bar bg-warning" style="width: 25%">Pendiente</div>
+                        {% elif pedido.estado == 'procesando' %}
+                            <div class="progress-bar bg-info" style="width: 50%">Procesando</div>
+                        {% elif pedido.estado == 'enviado' %}
+                            <div class="progress-bar bg-primary" style="width: 75%">Enviado</div>
+                        {% elif pedido.estado == 'entregado' %}
+                            <div class="progress-bar bg-success" style="width: 100%">Entregado</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col text-center">
+                            <div class="{% if pedido.estado in 'pendiente,procesando,enviado,entregado' %}text-success{% else %}text-muted{% endif %}">
+                                <i class="fas fa-check-circle"></i><br>
+                                <small>Confirmado</small>
+                            </div>
+                        </div>
+                        <div class="col text-center">
+                            <div class="{% if pedido.estado in 'procesando,enviado,entregado' %}text-success{% else %}text-muted{% endif %}">
+                                <i class="fas fa-cog"></i><br>
+                                <small>Procesando</small>
+                            </div>
+                        </div>
+                        <div class="col text-center">
+                            <div class="{% if pedido.estado in 'enviado,entregado' %}text-success{% else %}text-muted{% endif %}">
+                                <i class="fas fa-truck"></i><br>
+                                <small>Enviado</small>
+                            </div>
+                        </div>
+                        <div class="col text-center">
+                            <div class="{% if pedido.estado == 'entregado' %}text-success{% else %}text-muted{% endif %}">
+                                <i class="fas fa-home"></i><br>
+                                <small>Entregado</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Productos del pedido -->
+                <h5>Productos</h5>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Precio Unit.</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detalle in pedido.detalles.all %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if detalle.producto.imagen %}
+                                            <img src="{{ detalle.producto.imagen.url }}" alt="{{ detalle.producto.nombre }}" 
+                                                 class="rounded me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" 
+                                                 style="width: 50px; height: 50px;">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ detalle.producto.nombre }}</strong><br>
+                                            <small class="text-muted">{{ detalle.producto.codigo }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>${{ detalle.precio_unitario|floatformat:0 }}</td>
+                                <td><span class="badge bg-primary">{{ detalle.cantidad }}</span></td>
+                                <td><strong>${{ detalle.subtotal|floatformat:0 }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Resumen del pedido -->
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-calculator"></i> Resumen</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal:</span>
+                    <span>${{ pedido.total|floatformat:0 }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Envío:</span>
+                    <span class="text-success">Gratis</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>IVA (19%):</span>
+                    <span>${{ pedido.total|mul:0.19|floatformat:0 }}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <strong>Total:</strong>
+                    <strong class="text-primary">${{ pedido.total|mul:1.19|floatformat:0 }}</strong>
+                </div>
+                
+                <div class="d-grid gap-2 mt-4">
+                    {% if pedido.estado == 'entregado' %}
+                    <a href="{% url 'ventas:factura_pdf' pedido.pk %}" class="btn btn-success" target="_blank">
+                        <i class="fas fa-file-pdf"></i> Descargar Factura
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'clientes:mis_pedidos' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left"></i> Ver Todos mis Pedidos
+                    </a>
+                    
+                    <a href="{% url 'clientes:catalogo' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-shopping-bag"></i> Seguir Comprando
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Información de contacto -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="fas fa-headset"></i> ¿Necesitas Ayuda?</h6>
+            </div>
+            <div class="card-body">
+                <p class="small mb-2">
+                    <i class="fas fa-phone text-primary"></i> 
+                    <strong>Teléfono:</strong> +56 2 2345 6789
+                </p>
+                <p class="small mb-2">
+                    <i class="fas fa-envelope text-primary"></i> 
+                    <strong>Email:</strong> ayuda@perfulandia.com
+                </p>
+                <p class="small mb-0">
+                    <i class="fas fa-clock text-primary"></i> 
+                    <strong>Horario:</strong> Lun-Vie 9:00-18:00
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

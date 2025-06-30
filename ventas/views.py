@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.views.generic import ListView, CreateView, DetailView
+from django.views.generic import ListView, CreateView, DetailView, TemplateView
 from django.urls import reverse_lazy
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
@@ -21,99 +21,25 @@ from .serializers import VentaSerializer
 from core.permissions import RolRequeridoMixin
 from inventario.models import Producto, MovimientoInventario
 
-class VentasListView(RolRequeridoMixin, ListView):
-    model = Venta
+class VentasListView(RolRequeridoMixin, TemplateView):
     template_name = 'ventas/ventas_list.html'
-    context_object_name = 'ventas'
-    roles_permitidos = ['vendedor', 'gerente', 'admin']
-    paginate_by = 20
-    
-    def get_queryset(self):
-        queryset = Venta.objects.select_related('vendedor', 'cliente').order_by('-fecha_venta')
-        
-        # Filtros
-        fecha_desde = self.request.GET.get('fecha_desde')
-        fecha_hasta = self.request.GET.get('fecha_hasta')
-        if fecha_desde:
-            queryset = queryset.filter(fecha_venta__date__gte=fecha_desde)
-        if fecha_hasta:
-            queryset = queryset.filter(fecha_venta__date__lte=fecha_hasta)
-        
-        vendedor_id = self.request.GET.get('vendedor')
-        if vendedor_id:
-            queryset = queryset.filter(vendedor_id=vendedor_id)
-        
-        return queryset
+    roles_permitidos = ['gerente', 'admin', 'vendedor']
 
-class RegistrarVentaView(RolRequeridoMixin, CreateView):
-    model = Venta
-    form_class = VentaForm
+class RegistrarVentaView(RolRequeridoMixin, TemplateView):
     template_name = 'ventas/registrar_venta.html'
-    success_url = reverse_lazy('ventas:lista')
-    roles_permitidos = ['vendedor', 'gerente', 'admin']
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['productos'] = Producto.objects.filter(activo=True, stock__gt=0)
-        return context
-    
-    def form_valid(self, form):
-        venta = form.save(commit=False)
-        venta.vendedor = self.request.user
-        venta.numero_venta = f"VTA-{timezone.now().strftime('%Y%m%d%H%M%S')}"
-        venta.tipo = 'presencial'
-        
-        # Procesar items del carrito (desde JavaScript)
-        items_data = self.request.POST.get('items_data')
-        if not items_data:
-            messages.error(self.request, 'Debe agregar al menos un producto a la venta.')
-            return super().form_invalid(form)
-        
-        import json
-        items = json.loads(items_data)
-        
-        # Calcular totales
-        subtotal = 0
-        for item in items:
-            producto = Producto.objects.get(id=item['producto_id'])
-            cantidad = int(item['cantidad'])
-            precio = float(item['precio'])
-            subtotal += cantidad * precio
-        
-        venta.subtotal = subtotal
-        venta.impuesto = subtotal * 0.19  # IVA 19%
-        venta.total = venta.subtotal + venta.impuesto - venta.descuento
-        venta.save()
-        
-        # Crear detalles de venta
-        for item in items:
-            producto = Producto.objects.get(id=item['producto_id'])
-            cantidad = int(item['cantidad'])
-            precio = float(item['precio'])
-            
-            DetalleVenta.objects.create(
-                venta=venta,
-                producto=producto,
-                cantidad=cantidad,
-                precio_unitario=precio,
-                subtotal=cantidad * precio
-            )
-            
-            # Actualizar stock
-            producto.stock -= cantidad
-            producto.save()
-            
-            # Registrar movimiento
-            MovimientoInventario.objects.create(
-                producto=producto,
-                tipo='salida',
-                cantidad=cantidad,
-                motivo=f'Venta {venta.numero_venta}',
-                usuario=self.request.user
-            )
-        
-        messages.success(self.request, f'Venta {venta.numero_venta} registrada exitosamente.')
-        return redirect('ventas:detalle', pk=venta.pk)
+    roles_permitidos = ['gerente', 'admin', 'vendedor']
+
+class VentaDetalleView(RolRequeridoMixin, TemplateView):
+    template_name = 'ventas/venta_detalle.html'
+    roles_permitidos = ['gerente', 'admin', 'vendedor']
+
+class POSView(RolRequeridoMixin, TemplateView):
+    template_name = 'ventas/pos_venta.html'
+    roles_permitidos = ['gerente', 'admin', 'vendedor']
+
+class FacturasListView(RolRequeridoMixin, TemplateView):
+    template_name = 'ventas/facturas_list.html'
+    roles_permitidos = ['gerente', 'admin']
 
 class VentaDetailView(RolRequeridoMixin, DetailView):
     model = Venta

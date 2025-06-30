@@ -14,7 +14,14 @@ class RegistroForm(UserCreationForm):
 class PerfilForm(forms.ModelForm):
     class Meta:
         model = Usuario
-        fields = ('first_name', 'last_name', 'email')
+        fields = ('first_name', 'last_name', 'email', 'telefono', 'direccion')
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'direccion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
 
 class UsuarioForm(forms.ModelForm):
     class Meta:

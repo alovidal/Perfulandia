@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mi Perfil - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Columna de la Izquierda: Avatar y Datos Básicos -->
+    <div class="col-md-4">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <img src="{% static 'img/placeholder.png' %}" class="rounded-circle mb-3" width="150" height="150" alt="Avatar" style="object-fit: cover;">
+                <h4 class="card-title">{{ user.get_full_name|default:user.username }}</h4>
+                <p class="text-muted">{{ user.get_rol_display }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Columna de la Derecha: Formulario de Perfil -->
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h3>Editar Perfil</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">{{ form.first_name.label_tag }} {{ form.first_name }}</div>
+                        <div class="col-md-6 mb-3">{{ form.last_name.label_tag }} {{ form.last_name }}</div>
+                    </div>
+                    <div class="mb-3">{{ form.email.label_tag }} {{ form.email }}</div>
+                    <div class="mb-3">{{ form.telefono.label_tag }} {{ form.telefono }}</div>
+                    <div class="mb-3">{{ form.direccion.label_tag }} {{ form.direccion }}</div>
+                    
+                    <hr>
+                    
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <a href="{% url 'usuarios:cambiar_password' %}" class="btn btn-outline-danger">Cambiar Contraseña</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
